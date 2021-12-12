@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed84b6472af7c99468e58766a42f2f6e, type: 3}
+  m_Name: PData_Default
+  m_EditorClassIdentifier: 
+  hpMax: 1
+  iFramesMax: 0
+  gravity: -0.1
+  terminalVelocity: 12
+  groundedLayerMask:
+    serializedVersion: 2
+    m_Bits: 257
+  usingProjectile: {fileID: 3958774754231914332, guid: 188674d7b633beb44b1b53f42c7a91c6,
+    type: 3}
+  moveSpeed: 3
+  maxSpeed: 6
+  groundedDeceleration: 0.3
+  aerialDeceleration: 0.3
+  turnDeceleration: 0.3
+  moveAcceleration: 4
+  jumpForce: 8
+  maximumJumpTime: 0.2
+  coyoteTimeMax: 0.1
+  risingGravityMultiplier: 1
+  fallingGravityMultiplier: 1.3
+  aerialMovementMultiplier: 0.65
+  projectileShootCooldown: 0.2
+  possibleProjectiles:
+  - type: 0
+    prefab: {fileID: 3958774754231914332, guid: 188674d7b633beb44b1b53f42c7a91c6,
+      type: 3}
