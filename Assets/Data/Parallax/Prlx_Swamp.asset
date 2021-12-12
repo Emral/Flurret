@@ -15,8 +15,8 @@ MonoBehaviour:
   backdropColor: {r: 0, g: 0, b: 0, a: 1}
   layers:
   - image: {fileID: 21300000, guid: 790384767d0946349b2506bc2fbf976b, type: 3}
-    tint: {r: 0.3290762, g: 0.54441553, b: 0.8018868, a: 1}
-    depth: 440
+    tint: {r: 0.3882353, g: 0.14509805, b: 0.12156863, a: 1}
+    depth: 867
     speed: {x: 0, y: 0}
     repeat: {x: -1, y: -1}
     horizontalAlign: 1
@@ -38,8 +38,32 @@ MonoBehaviour:
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
+  - image: {fileID: 21300000, guid: 38c34a16255d9ff4d8f29d4525378d53, type: 3}
+    tint: {r: 0.5882353, g: 0.2784314, b: 0.2509804, a: 1}
+    depth: 469
+    speed: {x: -1, y: 0}
+    repeat: {x: 0, y: 0}
+    horizontalAlign: 1
+    verticalAlign: -1
+    hidden: 0
+    advanced: 0
+    tag: Default
+    animation: {fileID: 0}
+    spriteMaterial: {fileID: 0}
+    extraEffects: {fileID: 0}
+    overrideSpeed: 0
+    speedOverride: {x: 0, y: 0}
+    overridePriority: 0
+    priority: 0
+    offset: {x: 0, y: 0}
+    gap: {x: 0, y: 0}
+    margin:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
   - image: {fileID: 21300000, guid: 54724596a7289124f904b33ef6543426, type: 3}
-    tint: {r: 0.20754719, g: 0.15566039, b: 0.19592242, a: 1}
+    tint: {r: 0.24705882, g: 0.09803922, b: 0.08627451, a: 1}
     depth: 171
     speed: {x: 0, y: 0}
     repeat: {x: -1, y: 0}
@@ -63,12 +87,12 @@ MonoBehaviour:
       m_Top: 0
       m_Bottom: 0
   - image: {fileID: 21300000, guid: 3b0360143aba5e64e996163109432a8e, type: 3}
-    tint: {r: 0.16037738, g: 0.07035422, b: 0.08885365, a: 1}
+    tint: {r: 0.14901961, g: 0.05882353, b: 0.050980393, a: 1}
     depth: 73
     speed: {x: 0, y: 0}
     repeat: {x: 0, y: 0}
     horizontalAlign: 1
-    verticalAlign: 0
+    verticalAlign: -1
     hidden: 0
     advanced: 0
     tag: Default
@@ -80,6 +104,54 @@ MonoBehaviour:
     overridePriority: 0
     priority: 0
     offset: {x: 0, y: 0}
+    gap: {x: 0, y: 0}
+    margin:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+  - image: {fileID: 21300000, guid: 4de6b97639bf58e49b790b285520c3b5, type: 3}
+    tint: {r: 0.65882355, g: 0.34117648, b: 0.15686275, a: 1}
+    depth: 771
+    speed: {x: 0, y: 0}
+    repeat: {x: 0, y: 0}
+    horizontalAlign: 1
+    verticalAlign: 1
+    hidden: 0
+    advanced: 1
+    tag: Default
+    animation: {fileID: 0}
+    spriteMaterial: {fileID: 0}
+    extraEffects: {fileID: 0}
+    overrideSpeed: 0
+    speedOverride: {x: 0, y: 0}
+    overridePriority: 0
+    priority: 0
+    offset: {x: -3, y: -2}
+    gap: {x: 0, y: 0}
+    margin:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+  - image: {fileID: 21300000, guid: e61144ba233bb9e46b190b53e03f0e38, type: 3}
+    tint: {r: 0.14901961, g: 0.05882353, b: 0.050980393, a: 1}
+    depth: 377
+    speed: {x: 0, y: 0}
+    repeat: {x: 0, y: 0}
+    horizontalAlign: -1
+    verticalAlign: -1
+    hidden: 0
+    advanced: 1
+    tag: Default
+    animation: {fileID: 0}
+    spriteMaterial: {fileID: 0}
+    extraEffects: {fileID: 0}
+    overrideSpeed: 0
+    speedOverride: {x: 0, y: 0}
+    overridePriority: 0
+    priority: 0
+    offset: {x: 5, y: 3}
     gap: {x: 0, y: 0}
     margin:
       m_Left: 0

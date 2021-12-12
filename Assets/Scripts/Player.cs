@@ -144,7 +144,7 @@ public class Player : Entity<PlayerData>
 
         if (!_isGrounded)
         {
-            newVelocity.y += data.gravity * (newVelocity.y > 0 ? data.risingGravityMultiplier : data.fallingGravityMultiplier);
+            newVelocity.y += data.gravity * (newVelocity.y > 0 ? data.risingGravityMultiplier : data.fallingGravityMultiplier) * Time.deltaTime;
 
             if (newVelocity.y < -data.terminalVelocity)
             {

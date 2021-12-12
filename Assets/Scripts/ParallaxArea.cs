@@ -8,6 +8,8 @@ public class ParallaxArea : MonoBehaviour
     {
         public Transform instantiatedLayer;
         public ParallaxLayer layerReference;
+        public Vector2 speedOffset = Vector2.zero;
+        public Vector2 elementSize = Vector2.zero;
     }
 
     [InlineEditor]
@@ -100,6 +102,7 @@ public class ParallaxArea : MonoBehaviour
         Rect size = layer.image.rect;
         size.width = size.width / layer.image.pixelsPerUnit + layer.gap.x;
         size.height = size.height / layer.image.pixelsPerUnit + layer.gap.y;
+        i.elementSize = new Vector2(size.width, size.height);
         Rect fullSize = ComputeLayerWidth(layer, size);
 
         float depth = 0;
@@ -133,7 +136,9 @@ public class ParallaxArea : MonoBehaviour
         float horizontalOffset = (float)layer.horizontalAlign * -0.5f * fullSize.width;
         float verticalOffset = (float)layer.verticalAlign * -0.5f * fullSize.height;
 
-        for (float x = -0.5f * fullSize.width + horizontalOffset; x < 0.5f * fullSize.width + horizontalOffset; x += size.width)
+        Vector2 toAddDueToSpeed = new Vector2(size.width * layer.speed.x != 0 ? 1 : 0, size.height * layer.speed.y != 0 ? 1 : 0);
+
+        for (float x = -0.5f * fullSize.width + horizontalOffset - toAddDueToSpeed.x; x < 0.5f * fullSize.width + horizontalOffset + toAddDueToSpeed.x; x += size.width)
         {
             if (xRepeats > layer.repeat.x && layer.repeat.x >= 0)
             {
@@ -142,7 +147,7 @@ public class ParallaxArea : MonoBehaviour
 
             float yRepeats = 0;
 
-            for (float y = -0.5f * fullSize.height + verticalOffset; y < 0.5f * fullSize.height + verticalOffset; y += size.height)
+            for (float y = -0.5f * fullSize.height + verticalOffset - toAddDueToSpeed.y; y < 0.5f * fullSize.height + verticalOffset + toAddDueToSpeed.y; y += size.height)
             {
                 if (yRepeats > layer.repeat.y && layer.repeat.y >= 0)
                 {
@@ -167,7 +172,7 @@ public class ParallaxArea : MonoBehaviour
                 {
                     Instantiate(layer.extraEffects, image.transform);
                 }
-                image.transform.localPosition = new Vector3(x + image.sprite.bounds.size.x * pivotDifference.x, y - image.sprite.bounds.size.y * pivotDifference.y, 0);
+                image.transform.localPosition = new Vector3(x + image.sprite.bounds.size.x * pivotDifference.x + layer.offset.x, y - image.sprite.bounds.size.y * pivotDifference.y + layer.offset.y, 0);
             }
         }
         _instantiatedLayers.Add(i);
@@ -238,8 +243,18 @@ public class ParallaxArea : MonoBehaviour
 
         Vector3 position = layerInstance.instantiatedLayer.position;
 
-        position.x = offsets[(int)layer.horizontalAlign].x + (1 - depth) * (cameraOffsets[(int)layer.horizontalAlign].x - offsets[(int)layer.horizontalAlign].x);
-        position.y = offsets[(int)layer.verticalAlign].y + (1 - depth) * (cameraOffsets[(int)layer.verticalAlign].y - offsets[(int)layer.verticalAlign].y);
+        layerInstance.speedOffset = layerInstance.speedOffset + layerInstance.layerReference.speed * Time.deltaTime;
+        if (Mathf.Abs(layerInstance.speedOffset.x) > layerInstance.elementSize.x)
+        {
+            layerInstance.speedOffset.x = (Mathf.Abs(layerInstance.speedOffset.x) % layerInstance.elementSize.x) * Mathf.Sign(layerInstance.speedOffset.x);
+        }
+        if (Mathf.Abs(layerInstance.speedOffset.y) > layerInstance.elementSize.y)
+        {
+            layerInstance.speedOffset.y = (Mathf.Abs(layerInstance.speedOffset.y) % layerInstance.elementSize.y) * Mathf.Sign(layerInstance.speedOffset.y);
+        }
+
+        position.x = offsets[(int)layer.horizontalAlign].x + (1 - depth) * (cameraOffsets[(int)layer.horizontalAlign].x - offsets[(int)layer.horizontalAlign].x) + layerInstance.speedOffset.x;
+        position.y = offsets[(int)layer.verticalAlign].y + (1 - depth) * (cameraOffsets[(int)layer.verticalAlign].y - offsets[(int)layer.verticalAlign].y) + layerInstance.speedOffset.y;
 
         layerInstance.instantiatedLayer.position = position;
     }
