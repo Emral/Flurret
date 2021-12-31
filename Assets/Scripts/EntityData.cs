@@ -11,6 +11,9 @@ public class EntityData : ScriptableObject
     public float gravity;
     public float terminalVelocity;
     public LayerMask groundedLayerMask;
+    public LayerMask leftWallLayerMask;
+    public LayerMask rightWallLayerMask;
+    public LayerMask ceilingLayerMask;
 
     public Projectile usingProjectile;
 }

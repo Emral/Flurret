@@ -16,10 +16,10 @@ TagManager:
   - StandableEnemies
   - Projectiles
   - EnemyProjectiles
-  - 
-  - 
-  - 
-  - 
+  - Semisolid_Up
+  - Semisolid_Left
+  - Semisolid_Down
+  - Semisolid_Right
   - 
   - 
   - 
@@ -41,14 +41,17 @@ TagManager:
   - name: Backgrounds
     uniqueID: 3686475779
     locked: 0
+  - name: BGOs
+    uniqueID: 1652682785
+    locked: 0
+  - name: Tiles
+    uniqueID: 1417996371
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
   - name: Enemies
     uniqueID: 3734618889
-    locked: 0
-  - name: Tiles
-    uniqueID: 1417996371
     locked: 0
   - name: Player
     uniqueID: 3137342113

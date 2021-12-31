@@ -18,7 +18,16 @@ MonoBehaviour:
   terminalVelocity: 12
   groundedLayerMask:
     serializedVersion: 2
-    m_Bits: 257
+    m_Bits: 2305
+  leftWallLayerMask:
+    serializedVersion: 2
+    m_Bits: 16385
+  rightWallLayerMask:
+    serializedVersion: 2
+    m_Bits: 4097
+  ceilingLayerMask:
+    serializedVersion: 2
+    m_Bits: 8193
   usingProjectile: {fileID: 3958774754231914332, guid: 188674d7b633beb44b1b53f42c7a91c6,
     type: 3}
   moveSpeed: 3

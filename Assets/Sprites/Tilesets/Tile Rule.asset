@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1b03bc0fee4d2644188bf01fe07feb23, type: 3}
+  m_Script: {fileID: 11500000, guid: 1c2154259db5e3640a7f312e99060081, type: 3}
   m_Name: Tile Rule
   m_EditorClassIdentifier: 
   m_DefaultSprite: {fileID: 7610864781041319337, guid: 6b2a98ae93c20b248a33f648d90cc6f8,

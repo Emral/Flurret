@@ -10,37 +10,40 @@ public enum PlayerAnimationState
     LookingUp = 5
 }
 
+public enum PositioningState
+{
+    Grounded = 0,
+    Aerial = 1
+}
+
 public enum PlayerProjectileType { Normal, Bouncy, Bomb }
 
 public class Player : Entity<PlayerData>
 {
     public Collider2D boundingCollider;
 
-    public Transform feetLocation;
-    public BoxCollider2D collisionBox;
-
     private PlayerAnimationState _animState;
+    private PositioningState __positionState;
 
     private float _fireDelay = 0;
     private readonly float _fireDelayMax = 0.05f;
     private readonly bool _isShooting;
     private float _currentJumpTime = 0;
     private float _coyoteTime = 0;
-    private bool __isGrounded;
     private int _direction = 1;
 
-    private bool _isGrounded
+    private PositioningState _positionState
     {
-        get => __isGrounded;
+        get => __positionState;
         set
         {
-            bool wasGrounded = __isGrounded;
-            __isGrounded = value;
-            if (_isGrounded)
+            PositioningState lastState = __positionState;
+            __positionState = value;
+            if (__positionState == PositioningState.Grounded)
             {
                 _coyoteTime = 0;
             }
-            else if (wasGrounded && rb.velocity.y <= 0)
+            else if (lastState == PositioningState.Grounded && velocity.y <= 0)
             {
                 _coyoteTime = data.coyoteTimeMax;
             }
@@ -52,6 +55,10 @@ public class Player : Entity<PlayerData>
     {
         base.Start();
         _vulnerableToLayers = LayerMask.GetMask("Enemy");
+        _layerMasks[Direction.Down] = data.groundedLayerMask;
+        _layerMasks[Direction.Left] = data.leftWallLayerMask;
+        _layerMasks[Direction.Right] = data.rightWallLayerMask;
+        _layerMasks[Direction.Up] = data.ceilingLayerMask;
         Manager.instance.playerInstance = this;
         Manager.instance.mainCam.GetComponent<CameraMovement>().AddTarget(this, true);
     }
@@ -85,9 +92,9 @@ public class Player : Entity<PlayerData>
 
     public void Move()
     {
-        Vector2 newVelocity = rb.velocity;
-
         float horizontalInput = Input.GetAxis("Horizontal");
+
+        Vector2 newVelocity = velocity;
 
         if (horizontalInput != 0)
         {
@@ -97,32 +104,23 @@ public class Player : Entity<PlayerData>
             renderGroup.transform.localScale = localScale;
         }
 
-        if (rb.velocity.y <= 0)
-        {
-            RaycastHit2D hit = Physics2D.BoxCast(feetLocation.position, new Vector2(collisionBox.size.x, 0.01f), 0, Vector2.down, 0.01f, data.groundedLayerMask);
-            RaycastHit2D hit2 = Physics2D.BoxCast(feetLocation.position + Vector3.up * 0.01f, new Vector2(collisionBox.size.x, 0.01f), 0, Vector2.up, 0.5f, data.groundedLayerMask);
-            if (hit.collider != null && hit2.collider == null)
-            {
-                _isGrounded = true;
-            }
-            else
-            {
-                _isGrounded = false;
-            }
-        }
-
-        bool canJump = _isGrounded || _coyoteTime > 0;
+        bool hasBottomCollision = HelperMaps.IsState(_collisionState[Direction.Down], ActionState.Stay);
+        bool hasTopCollision = HelperMaps.IsState(_collisionState[Direction.Up], ActionState.Stay);
 
         _coyoteTime -= Time.deltaTime;
 
+        bool canJump = hasBottomCollision || _coyoteTime > 0;
+
+        canJump.Log("Can Jump");
+
         if (Input.GetButtonDown("Jump") && canJump)
         {
-            _isGrounded = false;
+            _positionState = PositioningState.Aerial;
             _currentJumpTime = 0;
             _coyoteTime = 0;
         }
 
-        if (!_isGrounded && _currentJumpTime < data.maximumJumpTime && Input.GetButton("Jump"))
+        if (_positionState == PositioningState.Aerial && _currentJumpTime < data.maximumJumpTime && Input.GetButton("Jump"))
         {
             newVelocity.y = data.jumpForce;
             _currentJumpTime += Time.deltaTime;
@@ -133,16 +131,16 @@ public class Player : Entity<PlayerData>
             _currentJumpTime = data.maximumJumpTime;
         }
 
-        horizontalInput = horizontalInput * (_isGrounded ? 1 : data.aerialMovementMultiplier) * (horizontalInput * rb.velocity.x > 0 ? data.moveAcceleration : data.turnDeceleration);
+        horizontalInput = horizontalInput * (_positionState == PositioningState.Grounded ? 1 : data.aerialMovementMultiplier) * (horizontalInput * velocity.x > 0 ? data.moveAcceleration : data.turnDeceleration);
 
-        newVelocity.x = rb.velocity.x * (_isGrounded ? data.groundedDeceleration : data.aerialDeceleration) + horizontalInput * data.moveSpeed;
+        newVelocity.x = velocity.x * (_positionState == PositioningState.Grounded ? data.groundedDeceleration : data.aerialDeceleration) + horizontalInput * data.moveSpeed;
 
         if (Mathf.Abs(newVelocity.x) > data.maxSpeed)
         {
             newVelocity.x = Mathf.SmoothStep(newVelocity.x, data.maxSpeed * Mathf.Sign(newVelocity.x), 0.9f);
         }
 
-        if (!_isGrounded)
+        if (_positionState == PositioningState.Aerial)
         {
             newVelocity.y += data.gravity * (newVelocity.y > 0 ? data.risingGravityMultiplier : data.fallingGravityMultiplier) * Time.deltaTime;
 
@@ -156,11 +154,11 @@ public class Player : Entity<PlayerData>
             newVelocity.y = 0;
         }
 
-        rb.velocity = newVelocity;
+        velocity = newVelocity;
 
-        if (_isGrounded)
+        if (canJump)
         {
-            if (Mathf.Abs(rb.velocity.x) < 1)
+            if (Mathf.Abs(velocity.x) < 1)
             {
                 if (Input.GetAxis("Vertical") > 0)
                 {
@@ -182,7 +180,7 @@ public class Player : Entity<PlayerData>
         }
         else
         {
-            if (rb.velocity.y > 0)
+            if (velocity.y > 0)
             {
                 _animState = PlayerAnimationState.Jumping;
             }
@@ -193,6 +191,42 @@ public class Player : Entity<PlayerData>
         }
         //boundingCollider.KeepOnScreen(Manager.instance.mainCam);
         an.SetInteger("State", (int)_animState);
+    }
+
+    public override void Collide(Direction dir, ActionState state, RaycastHit2D hit, Vector2 source)
+    {
+        base.Collide(dir, state, hit, source);
+
+        bool isColliding = HelperMaps.IsState(state, ActionState.Stay);
+
+        Vector2 vel = velocity;
+        switch (dir)
+        {
+            case Direction.Down:
+                _positionState = (isColliding && vel.y < 0) ? PositioningState.Grounded : PositioningState.Aerial;
+
+                if (isColliding &&  vel.y < 0)
+                {
+                    vel.y = 0;
+                }
+                break;
+            case Direction.Up:
+                if (isColliding)
+                {
+                    vel.y = 0;
+                    _currentJumpTime = data.maximumJumpTime;
+                }
+                break;
+            case Direction.Left:
+            case Direction.Right:
+                if (isColliding)
+                {
+                    vel.x = 0;
+                }
+                break;
+        }
+
+        velocity = vel;
     }
 
     public override void Kill()
