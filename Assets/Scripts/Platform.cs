@@ -6,34 +6,26 @@ public class Platform : MonoBehaviour, ICollidable
 {
     internal Vector2 _velocity;
     private List<GameObject> _children = new List<GameObject>();
+    private Dictionary<GameObject, Direction> _directionMap = new Dictionary<GameObject, Direction>();
 
     public virtual void CollisionEnter(GameObject other, Direction dir)
     {
-        if (dir != Direction.Down)
-        {
-            return;
-        }
-
         if (!_children.Contains(other))
         {
             _children.Add(other);
-
-            DebugExtensions.Log("Child Added");
+            _directionMap.Add(other, dir);
+        } else if (_directionMap[other] != dir)
+        {
+            _directionMap[other] = dir;
         }
     }
 
     public virtual void CollisionExit(GameObject other, Direction dir)
     {
-        if (dir != Direction.Down)
-        {
-            return;
-        }
-
         if (_children.Contains(other))
         {
             _children.Remove(other);
-
-            DebugExtensions.Log("Child Removed");
+            _directionMap.Remove(other);
         }
     }
 
@@ -48,8 +40,31 @@ public class Platform : MonoBehaviour, ICollidable
 
         transform.Translate(thisVelocity);
 
-        _children.ForEach(t => t.transform.Translate(thisVelocity));
-
-        DebugExtensions.Log("Movement applied to children", _children.Count);
+        _children.ForEach(t => {
+            switch(_directionMap[t])
+            {
+                case Direction.Up:
+                    if (thisVelocity.y < 0)
+                    {
+                        t.transform.Translate(Vector2.up * thisVelocity);
+                    }
+                    break;
+                case Direction.Down:
+                    t.transform.Translate(thisVelocity);
+                    break;
+                case Direction.Right:
+                    if (thisVelocity.x < 0)
+                    {
+                        t.transform.Translate(Vector2.right * thisVelocity);
+                    }
+                    break;
+                case Direction.Left:
+                    if (thisVelocity.x > 0)
+                    {
+                        t.transform.Translate(Vector2.right * thisVelocity);
+                    }
+                    break;
+            }
+        });
     }
 }

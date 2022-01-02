@@ -10,7 +10,7 @@ public static class DebugExtensions
         Debug.Log(title + ": " + o.ToString());
     }
 
-    public static void Log(params object[] o)
+    public static void LogMany(params object[] o)
     {
         string s = string.Empty;
 

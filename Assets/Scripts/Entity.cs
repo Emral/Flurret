@@ -135,12 +135,21 @@ public abstract class Entity : MonoBehaviour, IFacingDirection
         {
             Direction dir = _collisionState.Keys.ElementAt(i);
             Rect colliderEdge = GetColliderEdge(dir);
-            Vector2 rayDir = i < 2 ? Vector2.right : Vector2.up;
+            Vector2 rayDir = HelperMaps.DirectionVectorMap[dir];
             float val = i < 2 ? velocity.x : velocity.y;
-            float length = Mathf.Max(Mathf.Abs((val * Time.deltaTime)), 0.01f) * Mathf.Sign(val);
-            RaycastHit2D hit = Physics2D.BoxCast(colliderEdge.position, colliderEdge.size, 0, rayDir, length, _layerMasks[dir]);
-            RaycastHit2D hit2 = Physics2D.BoxCast(colliderEdge.position - 0.05f * HelperMaps.DirectionVectorMap[dir], colliderEdge.size, 0, -HelperMaps.DirectionVectorMap[dir], Mathf.Abs(length), _layerMasks[dir]);
-
+            if (val >= -0.1 && val <= 0.1f)
+            {
+                val = 0.1f;
+            }
+            else
+            {
+                rayDir = i < 2 ? Vector2.right : Vector2.up;
+            }
+            val.Log("Value for " + dir.ToString());
+            float length = Mathf.Abs(val * Time.deltaTime) * Mathf.Sign(val);
+            RaycastHit2D hit = Physics2D.BoxCast(colliderEdge.position, colliderEdge.size * 0.99f, 0, rayDir, length, _layerMasks[dir]);
+            RaycastHit2D hit2 = Physics2D.BoxCast(colliderEdge.position - 0.05f * HelperMaps.DirectionVectorMap[dir], colliderEdge.size * 0.99f, 0, -HelperMaps.DirectionVectorMap[dir], Mathf.Abs(length), _layerMasks[dir]);
+            
             if (hit && !hit2)
             {
                 _collisionType[dir] = CollisionAction.Solid;
@@ -153,16 +162,28 @@ public abstract class Entity : MonoBehaviour, IFacingDirection
                     _collisionState[dir] = ActionState.Hit;
                 }
 
-                //velocity.x = i < 2 ? (colliderEdge.x - hit.point.x) : velocity.x;
-                //velocity.y = i < 2 ? velocity.y : (colliderEdge.y - hit.point.y);
                 if (hit.transform.GetComponent<ICollidable>() is ICollidable collidable)
                 {
-                    _lastCollisions[dir] = collidable;
+
                     if (_collisionState[dir] == ActionState.Hit)
                     {
+                        if (_lastCollisions[dir] != null)
+                        {
+                            _lastCollisions[dir].CollisionExit(gameObject, dir);
+                            _lastCollisions[dir] = null;
+                        }
+
                         collidable.CollisionEnter(gameObject, dir);
+                        _lastCollisions[dir] = collidable;
                     }
                     collidable.CollisionStay(gameObject, dir);
+                } else
+                {
+                    if (_lastCollisions[dir] != null)
+                    {
+                        _lastCollisions[dir].CollisionExit(gameObject, dir);
+                        _lastCollisions[dir] = null;
+                    }
                 }
             }
             else
@@ -185,6 +206,27 @@ public abstract class Entity : MonoBehaviour, IFacingDirection
             }
 
             Collide(dir, _collisionState[dir], hit, colliderEdge.position);
+
+            if (dir == Direction.Down && _collisionState[dir] == ActionState.Hit)
+            {
+                Vector3 pos = transform.position;
+                //if (i < 2)
+                //{
+                //    pos.x = pos.x + (hit.point.x - colliderEdge.x);
+                //    velocity.x = 0;
+                //}
+                //else
+                //{
+                pos.y = hit.point.y + (transform.position.y - colliderEdge.y) + 0.005f;
+                velocity.y = 0;
+
+                //}
+                transform.position = pos;
+            }
+
+            Debug.DrawRay(colliderEdge.position + velocity * Time.deltaTime, rayDir * length, Color.yellow);
+            Debug.DrawRay(colliderEdge.position + velocity * Time.deltaTime - 0.05f * HelperMaps.DirectionVectorMap[dir] + 0.1f * HelperMaps.DirectionPerpendicularMap[dir], - HelperMaps.DirectionVectorMap[dir] * Mathf.Abs(length), Color.red);
+
         }
     }
 }

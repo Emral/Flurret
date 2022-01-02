@@ -111,8 +111,6 @@ public class Player : Entity<PlayerData>
 
         bool canJump = hasBottomCollision || _coyoteTime > 0;
 
-        canJump.Log("Can Jump");
-
         if (Input.GetButtonDown("Jump") && canJump)
         {
             _positionState = PositioningState.Aerial;
@@ -203,25 +201,30 @@ public class Player : Entity<PlayerData>
         switch (dir)
         {
             case Direction.Down:
-                _positionState = (isColliding && vel.y < 0) ? PositioningState.Grounded : PositioningState.Aerial;
+                _positionState = (isColliding && vel.y <= 0) ? PositioningState.Grounded : PositioningState.Aerial;
 
-                if (isColliding &&  vel.y < 0)
+                if (isColliding)
                 {
-                    vel.y = 0;
+                    vel.y = Mathf.Max(vel.y, 0);
                 }
                 break;
             case Direction.Up:
                 if (isColliding)
                 {
-                    vel.y = 0;
+                    vel.y = Mathf.Min(vel.y, 0);
                     _currentJumpTime = data.maximumJumpTime;
                 }
                 break;
             case Direction.Left:
+                if (isColliding)
+                {
+                    vel.x = Mathf.Max(vel.x, 0);
+                }
+                break;
             case Direction.Right:
                 if (isColliding)
                 {
-                    vel.x = 0;
+                    vel.x = Mathf.Min(vel.x, 0);
                 }
                 break;
         }
