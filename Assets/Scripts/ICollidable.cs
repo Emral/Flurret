@@ -4,7 +4,7 @@ using UnityEngine;
 
 public interface ICollidable
 {
-    void CollisionEnter(GameObject other, Direction dir);
-    void CollisionStay(GameObject other, Direction dir);
-    void CollisionExit(GameObject other, Direction dir);
+    void CollisionEnter(Entity other, Direction dir);
+    void CollisionStay(Entity other, Direction dir);
+    void CollisionExit(Entity other, Direction dir);
 }

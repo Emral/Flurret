@@ -109,7 +109,7 @@ public class Player : Entity<PlayerData>
 
         _coyoteTime -= Time.deltaTime;
 
-        bool canJump = hasBottomCollision || _coyoteTime > 0;
+        bool canJump = _positionState == PositioningState.Grounded || _coyoteTime > 0;
 
         if (Input.GetButtonDown("Jump") && canJump)
         {
@@ -138,18 +138,11 @@ public class Player : Entity<PlayerData>
             newVelocity.x = Mathf.SmoothStep(newVelocity.x, data.maxSpeed * Mathf.Sign(newVelocity.x), 0.9f);
         }
 
-        if (_positionState == PositioningState.Aerial)
-        {
-            newVelocity.y += data.gravity * (newVelocity.y > 0 ? data.risingGravityMultiplier : data.fallingGravityMultiplier) * Time.deltaTime;
+        newVelocity.y += data.gravity * (newVelocity.y > 0 ? data.risingGravityMultiplier : data.fallingGravityMultiplier) * Time.deltaTime;
 
-            if (newVelocity.y < -data.terminalVelocity)
-            {
-                newVelocity.y = Mathf.SmoothStep(newVelocity.y, -data.terminalVelocity, 0.9f);
-            }
-        }
-        else
+        if (newVelocity.y < -data.terminalVelocity)
         {
-            newVelocity.y = 0;
+            newVelocity.y = Mathf.SmoothStep(newVelocity.y, -data.terminalVelocity, 0.9f);
         }
 
         velocity = newVelocity;

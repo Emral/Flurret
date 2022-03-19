@@ -30,18 +30,18 @@ MonoBehaviour:
     m_Bits: 8193
   usingProjectile: {fileID: 3958774754231914332, guid: 188674d7b633beb44b1b53f42c7a91c6,
     type: 3}
-  moveSpeed: 3
+  moveSpeed: 6
   maxSpeed: 6
   groundedDeceleration: 0.3
-  aerialDeceleration: 0.3
-  turnDeceleration: 0.3
-  moveAcceleration: 4
-  jumpForce: 8
-  maximumJumpTime: 0.3
+  aerialDeceleration: 0.8
+  turnDeceleration: 0.1
+  moveAcceleration: 2
+  jumpForce: 10
+  maximumJumpTime: 0.25
   coyoteTimeMax: 0.1
-  risingGravityMultiplier: 1
-  fallingGravityMultiplier: 1.1
-  aerialMovementMultiplier: 0.65
+  risingGravityMultiplier: 2
+  fallingGravityMultiplier: 1.5
+  aerialMovementMultiplier: 1
   projectileShootCooldown: 0.2
   possibleProjectiles:
   - type: 0

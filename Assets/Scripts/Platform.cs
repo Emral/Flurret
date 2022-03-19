@@ -5,22 +5,25 @@ using UnityEngine;
 public class Platform : MonoBehaviour, ICollidable
 {
     internal Vector2 _velocity;
-    private List<GameObject> _children = new List<GameObject>();
-    private Dictionary<GameObject, Direction> _directionMap = new Dictionary<GameObject, Direction>();
+    private List<Entity> _children = new List<Entity>();
+    private Dictionary<Entity, Direction> _directionMap = new Dictionary<Entity, Direction>();
 
-    public virtual void CollisionEnter(GameObject other, Direction dir)
+    private Collider2D _collider;
+
+    public virtual void CollisionEnter(Entity other, Direction dir)
     {
         if (!_children.Contains(other))
         {
             _children.Add(other);
             _directionMap.Add(other, dir);
+            Debug.Log("Adding player as child in direction " + dir);
         } else if (_directionMap[other] != dir)
         {
             _directionMap[other] = dir;
         }
     }
 
-    public virtual void CollisionExit(GameObject other, Direction dir)
+    public virtual void CollisionExit(Entity other, Direction dir)
     {
         if (_children.Contains(other))
         {
@@ -29,8 +32,65 @@ public class Platform : MonoBehaviour, ICollidable
         }
     }
 
-    public virtual void CollisionStay(GameObject other, Direction dir)
+    public virtual void CollisionStay(Entity other, Direction dir)
     {
+    }
+
+    private void MoveVelocity(Vector2 velocity)
+    {
+        bool isHorizontal = velocity.x != 0;
+        //transform.Translate(velocity);
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useNormalAngle = true;
+        if (isHorizontal)
+        {
+            if (velocity.x > 0)
+            {
+                filter.minNormalAngle = -45 + 180;
+                filter.maxNormalAngle = 45 + 180;
+            }
+            else
+            {
+                filter.minNormalAngle = -45 + 0;
+                filter.maxNormalAngle = 45 + 0;
+            }
+        }
+        else
+        {
+            if (velocity.y > 0)
+            {
+                filter.minNormalAngle = -45 + 90;
+                filter.maxNormalAngle = 45 + 90;
+            }
+            else
+            {
+                filter.minNormalAngle = -45 + 270;
+                filter.maxNormalAngle = 45 + 270;
+            }
+        }
+        List<Collider2D> overlaps = new List<Collider2D>();
+        int overlapCount = _collider.OverlapCollider(filter, overlaps);
+        foreach(Collider2D overlap in overlaps)
+        {
+            if (overlap.GetComponent<Entity>() is Entity e && overlap.attachedRigidbody.IsTouching(_collider, filter))
+            {
+                if (isHorizontal)
+                {
+                    e.TryMoveHorizontally(velocity.x);
+                    "Moving player horizontally".Log("HLOG");
+                } else
+                {
+                    e.TryMoveVertically(velocity.y);
+                    "Moving player vertically".Log("VLOG");
+                }
+            }
+        }
+        //transform.Translate(-velocity);
+    }
+
+    void Awake()
+    {
+        _collider = GetComponent<Collider2D>();
     }
 
     // Update is called once per frame
@@ -38,30 +98,36 @@ public class Platform : MonoBehaviour, ICollidable
     {
         Vector3 thisVelocity = new Vector3(_velocity.x, _velocity.y) * Time.deltaTime;
 
+        //transform.Translate(thisVelocity);
+
+        MoveVelocity(new Vector2(thisVelocity.x, 0));
+        MoveVelocity(new Vector2(0, thisVelocity.y));
         transform.Translate(thisVelocity);
 
-        _children.ForEach(t => {
-            switch(_directionMap[t])
+        _children.ForEach(t =>
+        {
+            switch (_directionMap[t])
             {
                 case Direction.Up:
                     if (thisVelocity.y < 0)
                     {
-                        t.transform.Translate(Vector2.up * thisVelocity);
+                        t.TryMoveVertically(thisVelocity.y, this);
                     }
                     break;
                 case Direction.Down:
-                    t.transform.Translate(thisVelocity);
+                    t.TryMoveVertically(thisVelocity.y, this);
+                    t.TryMoveHorizontally(thisVelocity.x, this);
                     break;
                 case Direction.Right:
                     if (thisVelocity.x < 0)
                     {
-                        t.transform.Translate(Vector2.right * thisVelocity);
+                        t.TryMoveVertically(thisVelocity.x, this);
                     }
                     break;
                 case Direction.Left:
                     if (thisVelocity.x > 0)
                     {
-                        t.transform.Translate(Vector2.right * thisVelocity);
+                        t.TryMoveVertically(thisVelocity.x, this);
                     }
                     break;
             }

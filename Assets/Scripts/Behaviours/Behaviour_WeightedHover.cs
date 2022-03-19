@@ -59,14 +59,14 @@ public class Behaviour_WeightedHover : Platform
         base.Update();
     }
 
-    public override void CollisionStay(GameObject other, Direction dir)
+    public override void CollisionStay(Entity other, Direction dir)
     {
         if (dir != Direction.Down)
         {
             return;
         }
 
-        if (other.layer == 6)
+        if (other.gameObject.layer == 6)
         {
             beingWeighted = true;
         }

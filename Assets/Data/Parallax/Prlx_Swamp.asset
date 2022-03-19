@@ -46,7 +46,7 @@ MonoBehaviour:
     horizontalAlign: 1
     verticalAlign: -1
     hidden: 0
-    advanced: 0
+    advanced: 1
     tag: Default
     animation: {fileID: 0}
     spriteMaterial: {fileID: 0}

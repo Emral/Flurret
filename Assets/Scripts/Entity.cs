@@ -23,6 +23,14 @@ public abstract class Entity : MonoBehaviour, IFacingDirection
         [Direction.Down] = null
     };
 
+    private Dictionary<Direction, ICollidable> _nextCollisions = new Dictionary<Direction, ICollidable>()
+    {
+        [Direction.Left] = null,
+        [Direction.Right] = null,
+        [Direction.Up] = null,
+        [Direction.Down] = null
+    };
+
     internal Dictionary<Direction, LayerMask> _layerMasks = new Dictionary<Direction, LayerMask>()
     {
         [Direction.Left] = 0,
@@ -74,12 +82,23 @@ public abstract class Entity : MonoBehaviour, IFacingDirection
 
     public virtual void LateUpdate()
     {
-        if (col != null)
+        foreach (Direction dir in _nextCollisions.Keys)
         {
-            DoCollisions();
+            if (_nextCollisions[dir] == null && _lastCollisions[dir] != null)
+            {
+                _lastCollisions[dir].CollisionExit(this, dir);
+                _lastCollisions[dir] = _nextCollisions[dir];
+                _nextCollisions[dir] = null;
+            }
         }
 
-        transform.Translate(new Vector3(velocity.x, velocity.y) * Time.deltaTime);
+        if (col != null)
+        {
+            TryMoveVertically(velocity.y * Time.deltaTime);
+            TryMoveHorizontally(velocity.x * Time.deltaTime);
+        }
+
+        //transform.Translate(new Vector3(velocity.x, velocity.y) * Time.deltaTime);
     }
 
     public virtual void SetSpeed(Vector2 speed)
@@ -129,105 +148,99 @@ public abstract class Entity : MonoBehaviour, IFacingDirection
             new Vector2(Mathf.Max(HelperMaps.DirectionPerpendicularMap[dir].x * col.bounds.size.x, 0.01f), Mathf.Max(HelperMaps.DirectionPerpendicularMap[dir].y * col.bounds.size.y, 0.01f)));
     }
 
-    private void DoCollisions()
+    private void ResetDirectionalCollision(Direction dir)
     {
-        for (int i=0; i < _collisionState.Count; i++)
+        if (_nextCollisions[dir] != null)
         {
-            Direction dir = _collisionState.Keys.ElementAt(i);
-            Rect colliderEdge = GetColliderEdge(dir);
-            Vector2 rayDir = HelperMaps.DirectionVectorMap[dir];
-            float val = i < 2 ? velocity.x : velocity.y;
-            if (val >= -0.1 && val <= 0.1f)
-            {
-                val = 0.1f;
-            }
-            else
-            {
-                rayDir = i < 2 ? Vector2.right : Vector2.up;
-            }
-            val.Log("Value for " + dir.ToString());
-            float length = Mathf.Abs(val * Time.deltaTime) * Mathf.Sign(val);
-            RaycastHit2D hit = Physics2D.BoxCast(colliderEdge.position, colliderEdge.size * 0.99f, 0, rayDir, length, _layerMasks[dir]);
-            RaycastHit2D hit2 = Physics2D.BoxCast(colliderEdge.position - 0.05f * HelperMaps.DirectionVectorMap[dir], colliderEdge.size * 0.99f, 0, -HelperMaps.DirectionVectorMap[dir], Mathf.Abs(length), _layerMasks[dir]);
-            
-            if (hit && !hit2)
-            {
-                _collisionType[dir] = CollisionAction.Solid;
-                if (_collisionState[dir] == ActionState.Hit)
-                {
-                    _collisionState[dir] = ActionState.Stay;
-                }
-                else
-                {
-                    _collisionState[dir] = ActionState.Hit;
-                }
+            _nextCollisions[dir] = null;
+        }
+    }
 
-                if (hit.transform.GetComponent<ICollidable>() is ICollidable collidable)
-                {
+    private bool TryMoveInternal(float desiredDistance, Direction dir, Vector2 movementVector, ICollidable parent)
+    {
+        if (Mathf.Abs(desiredDistance) < 0.0001f)
+        {
+            return true;
+        }
 
+        float movedDistance = desiredDistance;
+        float sign = Mathf.Sign(desiredDistance);
+        if (desiredDistance == 0)
+        {
+            sign = 1;
+        }
+
+        float colliderSizeMultiplier = 0.5f;
+        float skinWidth = 0.02f;
+
+        RaycastHit2D hit = Physics2D.BoxCast(transform.position.To2D() + col.offset, col.size * colliderSizeMultiplier * 2 + movementVector * 2 * skinWidth, 0, movementVector, desiredDistance, _layerMasks[dir]);
+
+        if (hit && (movementVector == Vector2.right ? sign * hit.normal.x < 0 : sign * hit.normal.y < 0)
+            &&      ((dir == Direction.Right && hit.normal.x < 0 && hit.point.x > transform.position.x + col.offset.x + colliderSizeMultiplier * col.size.x)
+                 || (dir == Direction.Left  && hit.normal.x > 0 && hit.point.x < transform.position.x + col.offset.x - colliderSizeMultiplier * col.size.x)
+                 || (dir == Direction.Up    && hit.normal.y < 0 && hit.point.y > transform.position.y + col.offset.y + colliderSizeMultiplier * col.size.y)
+                 || (dir == Direction.Down  && hit.normal.y > 0 && hit.point.y < transform.position.y + col.offset.y - colliderSizeMultiplier * col.size.y)))
+        {
+
+            movedDistance = movementVector == Vector2.right ? hit.point.x - (transform.position.To2D().x + col.offset.x + (col.size.x * 0.5f + skinWidth) * sign)
+                                                            : hit.point.y - (transform.position.To2D().y + col.offset.y + (col.size.y * 0.5f + skinWidth) * sign);
+
+            _collisionType[dir] = CollisionAction.Solid;
+
+            _collisionState[dir] = _collisionState[dir] == ActionState.Hit ? ActionState.Stay : ActionState.Hit;
+
+            if (hit.transform.GetComponent<ICollidable>() is ICollidable collidable)
+            {
+                if (parent == null)
+                {
                     if (_collisionState[dir] == ActionState.Hit)
                     {
-                        if (_lastCollisions[dir] != null)
-                        {
-                            _lastCollisions[dir].CollisionExit(gameObject, dir);
-                            _lastCollisions[dir] = null;
-                        }
+                        ResetDirectionalCollision(dir);
 
-                        collidable.CollisionEnter(gameObject, dir);
-                        _lastCollisions[dir] = collidable;
+                        collidable.CollisionEnter(this, dir);
+                        _nextCollisions[dir] = collidable;
                     }
-                    collidable.CollisionStay(gameObject, dir);
-                } else
-                {
-                    if (_lastCollisions[dir] != null)
-                    {
-                        _lastCollisions[dir].CollisionExit(gameObject, dir);
-                        _lastCollisions[dir] = null;
-                    }
+                    collidable.CollisionStay(this, dir);
                 }
             }
             else
             {
-                _collisionType[dir] = CollisionAction.None;
-                if (_collisionState[dir] == ActionState.Leave)
-                {
-                    _collisionState[dir] = ActionState.None;
-                }
-                else
-                {
-                    _collisionState[dir] = ActionState.Leave;
-                }
-
-                if (_lastCollisions[dir] != null)
-                {
-                    _lastCollisions[dir].CollisionExit(gameObject, dir);
-                    _lastCollisions[dir] = null;
-                }
+                ResetDirectionalCollision(dir);
             }
-
-            Collide(dir, _collisionState[dir], hit, colliderEdge.position);
-
-            if (dir == Direction.Down && _collisionState[dir] == ActionState.Hit)
-            {
-                Vector3 pos = transform.position;
-                //if (i < 2)
-                //{
-                //    pos.x = pos.x + (hit.point.x - colliderEdge.x);
-                //    velocity.x = 0;
-                //}
-                //else
-                //{
-                pos.y = hit.point.y + (transform.position.y - colliderEdge.y) + 0.005f;
-                velocity.y = 0;
-
-                //}
-                transform.position = pos;
-            }
-
-            Debug.DrawRay(colliderEdge.position + velocity * Time.deltaTime, rayDir * length, Color.yellow);
-            Debug.DrawRay(colliderEdge.position + velocity * Time.deltaTime - 0.05f * HelperMaps.DirectionVectorMap[dir] + 0.1f * HelperMaps.DirectionPerpendicularMap[dir], - HelperMaps.DirectionVectorMap[dir] * Mathf.Abs(length), Color.red);
-
         }
+        else
+        {
+            _collisionType[dir] = CollisionAction.None;
+
+            _collisionState[dir] = _collisionState[dir] == ActionState.Leave ? ActionState.None : ActionState.Leave;
+
+            ResetDirectionalCollision(dir);
+        }
+
+        Collide(dir, _collisionState[dir], hit, hit.point);
+
+        transform.Translate(movementVector * movedDistance);
+        //Vector3 position = transform.position;
+        //position.x = Mathf.Round(position.x * 24) / 24;
+        //position.y = Mathf.Round(position.y * 24) / 24;
+        //transform.position = position;
+
+        Vector2 edge = movementVector == Vector2.right ? (transform.position.To2D() + movementVector * (col.offset + (col.size * 0.5f) * sign))
+                                                       : (transform.position.To2D() + movementVector * (col.offset + (col.size * 0.5f) * sign));
+        Debug.DrawRay(edge, movementVector * movedDistance, Color.yellow);
+        //DebugExtensions.LogMany("Moving", dir.ToString(), "At speed", movedDistance, "wanting", desiredDistance);
+
+        return movedDistance == desiredDistance;
+    }
+
+    public bool TryMoveHorizontally(float desiredDistance, ICollidable parent = null)
+    {
+        return TryMoveInternal(desiredDistance, Mathf.Sign(desiredDistance) == 1 ? Direction.Right : Direction.Left, Vector2.right, parent);
+    }
+
+    public bool TryMoveVertically(float desiredDistance, ICollidable parent = null)
+    {
+        return TryMoveInternal(desiredDistance, Mathf.Sign(desiredDistance) == 1 ? Direction.Up : Direction.Down, Vector2.up, parent);
     }
 }
 
